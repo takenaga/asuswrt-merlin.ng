@@ -175,11 +175,8 @@ void start_cron(void);
 void start_wlcscan(void);
 void stop_wlcscan(void);
 
-#ifdef HND_ROUTER
 void start_jitterentropy(void);
 void stop_jitterentropy(void);
-#endif
-
 
 #ifndef MS_MOVE
 #define MS_MOVE		8192
@@ -9336,9 +9333,7 @@ start_aura_rgb_sw(void)
 int
 start_services(void)
 {
-#ifdef HND_ROUTER
 	start_jitterentropy();
-#endif
 #if defined(RTAX82U) || defined(DSL_AX82U) || defined(GSAX3000) || defined(GSAX5400)
 	start_ledg();
 	start_ledbtn();
@@ -9995,9 +9990,23 @@ stop_services(void)
 #if defined(RTCONFIG_CFEZ) && defined(RTCONFIG_BCMARM)
 	stop_envrams();
 #endif
-#ifdef HND_ROUTER
 	stop_jitterentropy();
-#endif
+}
+
+void start_jitterentropy()
+{
+	pid_t pid;
+	char *cmd_argv[] = { "/usr/sbin/jitterentropy-rngd",
+								"-p", "/var/run/jitterentropy-rngd.pid",
+								NULL};
+	_eval(cmd_argv, NULL, 0, &pid);
+}
+
+void stop_jitterentropy()
+{
+	pid_t pid;
+	char *cmd_argv[] = { "killall", "jitterentropy-rngd", NULL};
+	_eval(cmd_argv, NULL, 0, &pid);
 }
 
 #ifdef RTCONFIG_QCA
@@ -19364,23 +19373,6 @@ void PS_pod_main(void)
 			_dprintf("%s: fork err!\n", __func__);
 	}
 	return;
-}
-#endif
-
-#ifdef HND_ROUTER
-void start_jitterentropy()
-{
-	pid_t pid;
-	char *cmd_argv[] = { "/usr/sbin/jitterentropy-rngd",
-	                     "-p", "/var/run/jitterentropy-rngd.pid",
-	                     NULL};
-
-        _eval(cmd_argv, NULL, 0, &pid);
-}
-
-void stop_jitterentropy()
-{
-	kill_pidfile_tk("/var/run/jitterentropy-rngd.pid");
 }
 #endif
 
